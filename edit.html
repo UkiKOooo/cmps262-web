@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Task</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background-color: #f2f2f2;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    nav {
+      margin-bottom: 30px;
+    }
+
+    nav a {
+      margin-right: 15px;
+      text-decoration: none;
+      color: #0066cc;
+      font-size: 16px;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    .form-box {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background-color: #0055aa;
+    }
+
+    #errorMsg {
+      color: red;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    #editSection {
+      display: none;
+      margin-top: 20px;
+    }
+
+    /* Modal styles */
+    #modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+
+    #modalBox {
+      background-color: white;
+      margin: 150px auto;
+      padding: 30px;
+      width: 300px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    #modalBox button {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Edit Task</h1>
+
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="view.html">View Tasks</a>
+    <a href="add.html">Add Task</a>
+    <a href="edit.html">Edit Task</a>
+  </nav>
+
+  <div class="form-box">
+    <label for="taskSelect">Select a Task:</label>
+    <select id="taskSelect" onchange="loadTask()">
+      <option value="">-- Loading tasks... --</option>
+    </select>
+
+    <div id="editSection">
+      <label for="newTitle">New Title:</label>
+      <input type="text" id="newTitle">
+
+      <label for="newStatus">New Status:</label>
+      <select id="newStatus">
+        <option value="pending">Pending</option>
+        <option value="in-progress">In Progress</option>
+        <option value="completed">Completed</option>
+      </select>
+
+      <button onclick="saveTask()">Save Changes</button>
+    </div>
+
+    <p id="errorMsg"></p>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal">
+    <div id="modalBox">
+      <p style="font-size: 18px; font-weight: bold;">Record has been saved.</p>
+      <button onclick="closeModal()">OK</button>
+    </div>
+  </div>
+
+  <script>
+    var allTasks = [];
+
+    // Load all tasks into the dropdown
+    fetch('https://my-express-app-rj65.onrender.com/api/v1/tasks')
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(tasks) {
+        allTasks = tasks;
+        var select = document.getElementById('taskSelect');
+        select.innerHTML = '<option value="">-- Select a task --</option>';
+
+        for (var i = 0; i < tasks.length; i++) {
+          var option = document.createElement('option');
+          option.value = tasks[i].id;
+          option.textContent = tasks[i].id + ' - ' + tasks[i].title + ' (' + tasks[i].status + ')';
+          select.appendChild(option);
+        }
+      })
+      .catch(function(error) {
+        document.getElementById('errorMsg').textContent = 'Error loading tasks.';
+      });
+
+    // When user selects a task, auto-fill the fields
+    function loadTask() {
+      var selectedId = document.getElementById('taskSelect').value;
+
+      if (selectedId === '') {
+        document.getElementById('editSection').style.display = 'none';
+        return;
+      }
+
+      for (var i = 0; i < allTasks.length; i++) {
+        if (allTasks[i].id == selectedId) {
+          document.getElementById('newTitle').value = allTasks[i].title;
+          document.getElementById('newStatus').value = allTasks[i].status;
+          document.getElementById('editSection').style.display = 'block';
+          break;
+        }
+      }
+    }
+
+    // Save updated task
+    function saveTask() {
+      var selectedId = document.getElementById('taskSelect').value;
+      var newTitle = document.getElementById('newTitle').value;
+      var newStatus = document.getElementById('newStatus').value;
+
+      if (newTitle === '') {
+        document.getElementById('errorMsg').textContent = 'Title cannot be empty.';
+        return;
+      }
+
+      document.getElementById('errorMsg').textContent = '';
+
+      fetch('https://my-express-app-rj65.onrender.com/api/v1/tasks/' + selectedId, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ title: newTitle, status: newStatus })
+      })
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(data) {
+        document.getElementById('modal').style.display = 'block';
+      })
+      .catch(function(error) {
+        document.getElementById('errorMsg').textContent = 'Error updating task.';
+      });
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+    }
+  </script>
+
+</body>
+</html>
