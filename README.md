@@ -31,6 +31,7 @@ If you want to run it locally:
 git clone https://github.com/UkiKOooo/cmps262-web.git
 cd cmps262-web
 ```
+<img width="682" height="281" alt="image" src="https://github.com/user-attachments/assets/9b947587-e1de-4d5d-ac89-bd0c78ecc18a" />
 
 Then open `index.html` in your browser.
 
