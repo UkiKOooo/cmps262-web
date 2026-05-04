@@ -10,13 +10,9 @@
       background-color: #f2f2f2;
     }
 
-    h1 {
-      color: #333;
-    }
+    h1 { color: #333; }
 
-    nav {
-      margin-bottom: 30px;
-    }
+    nav { margin-bottom: 30px; }
 
     nav a {
       margin-right: 15px;
@@ -25,9 +21,7 @@
       font-size: 16px;
     }
 
-    nav a:hover {
-      text-decoration: underline;
-    }
+    nav a:hover { text-decoration: underline; }
 
     .form-box {
       background-color: white;
@@ -61,22 +55,13 @@
       border-radius: 4px;
     }
 
-    button:hover {
-      background-color: #0055aa;
-    }
+    button:hover { background-color: #0055aa; }
 
-    #errorMsg {
-      color: red;
-      margin-top: 10px;
-      font-size: 14px;
-    }
+    #errorMsg { color: red; margin-top: 10px; font-size: 14px; }
 
-    #editSection {
-      display: none;
-      margin-top: 20px;
-    }
+    #editSection { display: none; margin-top: 20px; }
 
-    /* Modal styles */
+    /* Modal */
     #modal {
       display: none;
       position: fixed;
@@ -94,9 +79,7 @@
       text-align: center;
     }
 
-    #modalBox button {
-      margin-top: 15px;
-    }
+    #modalBox button { margin-top: 15px; }
   </style>
 </head>
 <body>
@@ -144,16 +127,21 @@
   <script>
     var allTasks = [];
 
-    // Load all tasks into the dropdown
+    function sendNotification(title, message) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, {
+          body: message,
+          icon: 'https://cdn-icons-png.flaticon.com/512/190/190411.png'
+        });
+      }
+    }
+
     fetch('https://my-express-app-rj65.onrender.com/api/v1/tasks')
-      .then(function(response) {
-        return response.json();
-      })
+      .then(function(response) { return response.json(); })
       .then(function(tasks) {
         allTasks = tasks;
         var select = document.getElementById('taskSelect');
         select.innerHTML = '<option value="">-- Select a task --</option>';
-
         for (var i = 0; i < tasks.length; i++) {
           var option = document.createElement('option');
           option.value = tasks[i].id;
@@ -165,15 +153,12 @@
         document.getElementById('errorMsg').textContent = 'Error loading tasks.';
       });
 
-    // When user selects a task, auto-fill the fields
     function loadTask() {
       var selectedId = document.getElementById('taskSelect').value;
-
       if (selectedId === '') {
         document.getElementById('editSection').style.display = 'none';
         return;
       }
-
       for (var i = 0; i < allTasks.length; i++) {
         if (allTasks[i].id == selectedId) {
           document.getElementById('newTitle').value = allTasks[i].title;
@@ -184,7 +169,6 @@
       }
     }
 
-    // Save updated task
     function saveTask() {
       var selectedId = document.getElementById('taskSelect').value;
       var newTitle = document.getElementById('newTitle').value;
@@ -199,16 +183,13 @@
 
       fetch('https://my-express-app-rj65.onrender.com/api/v1/tasks/' + selectedId, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: newTitle, status: newStatus })
       })
-      .then(function(response) {
-        return response.json();
-      })
+      .then(function(response) { return response.json(); })
       .then(function(data) {
         document.getElementById('modal').style.display = 'block';
+        sendNotification('Task Updated', 'Task "' + data.title + '" has been updated to ' + data.status + '.');
       })
       .catch(function(error) {
         document.getElementById('errorMsg').textContent = 'Error updating task.';
